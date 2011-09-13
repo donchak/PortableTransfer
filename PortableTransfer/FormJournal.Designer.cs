@@ -25,12 +25,12 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.transferJournalItemBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.typeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.actionTimeDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.backupIdDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.computerIdDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.backupVersionDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.transferJournalItemBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.panel1 = new System.Windows.Forms.Panel();
             this.btOk = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -60,10 +60,7 @@
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.Size = new System.Drawing.Size(660, 321);
             this.dataGridView1.TabIndex = 0;
-            // 
-            // transferJournalItemBindingSource
-            // 
-            this.transferJournalItemBindingSource.DataSource = typeof(PortableTransfer.TransferJournalItem);
+            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
             // 
             // typeDataGridViewTextBoxColumn
             // 
@@ -99,6 +96,10 @@
             this.backupVersionDataGridViewTextBoxColumn.HeaderText = "BackupVersion";
             this.backupVersionDataGridViewTextBoxColumn.Name = "backupVersionDataGridViewTextBoxColumn";
             this.backupVersionDataGridViewTextBoxColumn.ReadOnly = true;
+            // 
+            // transferJournalItemBindingSource
+            // 
+            this.transferJournalItemBindingSource.DataSource = typeof(PortableTransfer.TransferJournalItem);
             // 
             // panel1
             // 

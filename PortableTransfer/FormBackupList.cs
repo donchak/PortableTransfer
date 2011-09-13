@@ -6,14 +6,19 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Collections;
+using PortableTransfer.Helpers;
 
 namespace PortableTransfer {
     public partial class FormBackupList : Form {
         List<LocalInfo> result;
         Dictionary<LocalInfo, ListViewItem> infoDictionary = new Dictionary<LocalInfo, ListViewItem>();
+        Dictionary<Guid, ComputerNameInfo> computerNameInfoDict = new Dictionary<Guid,ComputerNameInfo>();
+        ComputerNameInfo computerName;
+        Guid computerGuid;
 
-        public List<LocalInfo> Result { get { return result; } set { result = value; } }
-        public FormBackupList(List<LocalInfo> infoList) {
+        public List<LocalInfo> Result { get { return result; } }
+        public ComputerNameInfo[] ComputerNamesResult { get { return CollectionHelper.EnumerableToArray<ComputerNameInfo>(computerNameInfoDict.Values); } }
+        public FormBackupList(List<LocalInfo> infoList, ComputerNameInfo[] computerNames) {
             InitializeComponent();
             ListViewItem firstItem = null;
             for (int i = 0; i < infoList.Count; i++) {
@@ -27,7 +32,12 @@ namespace PortableTransfer {
             }
             lvBackupList.Columns[0].Width = lvBackupList.Width * 19 / 100;
             lvBackupList.Columns[1].Width = lvBackupList.Width * 40 / 100;
-            lvBackupList.Columns[2].Width = lvBackupList.Width * 40 / 100;           
+            lvBackupList.Columns[2].Width = lvBackupList.Width * 40 / 100;
+            computerNameInfoDict = CollectionHelper.CollectionToDictionary<Guid, ComputerNameInfo>(computerNames, (k) => { return k.Guid; });
+            computerGuid = TransferConfigManager.GetComputerGuid();
+            if (computerNameInfoDict.TryGetValue(computerGuid, out computerName)) {
+                tbComputerName.Text = computerName.Name;
+            }
         }
 
         ListViewItem AddListViewItem(LocalInfo lbInfo) {
@@ -91,7 +101,15 @@ namespace PortableTransfer {
                 resultList.Add((LocalInfo)lvItem.Tag);
             }
             result = resultList;
+            computerNameInfoDict[computerName.Guid] = computerName;
             DialogResult = DialogResult.OK;
+        }
+
+        private void tbComputerName_TextChanged(object sender, EventArgs e) {
+            if (computerName == null) {
+                computerName = new ComputerNameInfo() { Guid = computerGuid };
+            }
+            computerName.Name = tbComputerName.Text;
         }
 
     }

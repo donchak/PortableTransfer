@@ -277,9 +277,10 @@ namespace PortableTransfer {
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e) {
-            using (FormBackupList fbl = new FormBackupList(localInfoList)) {
+            using (FormBackupList fbl = new FormBackupList(localInfoList, configManager.Backups.ComputerNames)) {
                 if (fbl.ShowDialog(this) == DialogResult.OK) {
                     localInfoList = fbl.Result;
+                    configManager.SetComputerNameDict(fbl.ComputerNamesResult);
                     configManager.SetLocalInfoList(localInfoList);
                     configManager.SaveUserData();
                     needSaveMainData = true;
@@ -289,7 +290,7 @@ namespace PortableTransfer {
         }
 
         private void journalToolStripMenuItem_Click(object sender, EventArgs e) {
-            using (FormJournal fj = new FormJournal(TransferConfigManager.LoadTransferJournal())) {
+            using (FormJournal fj = new FormJournal(TransferConfigManager.LoadTransferJournal(), configManager.Backups.ComputerNames)) {
                 fj.ShowDialog(this);
             }
         }

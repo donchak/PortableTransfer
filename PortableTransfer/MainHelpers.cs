@@ -43,6 +43,7 @@ namespace PortableTransfer.Helpers {
 
     public class CollectionHelper {
         public static T[] EnumerableToArray<T>(IEnumerable<T> enumerable) {
+            if (enumerable == null) return new T[0];
             List<T> result = new List<T>();
             foreach (T item in enumerable) {
                 result.Add(item);
@@ -52,8 +53,10 @@ namespace PortableTransfer.Helpers {
 
         public static Dictionary<K, T> CollectionToDictionary<K, T>(ICollection<T> collection, GetKeyFromObjectHander<K, T> getKey) {
             Dictionary<K, T> dict = new Dictionary<K, T>();
-            foreach (T item in collection) {
-                dict[getKey(item)] =  item;
+            if (collection != null) {
+                foreach (T item in collection) {
+                    dict[getKey(item)] = item;
+                }
             }
             return dict;
         }

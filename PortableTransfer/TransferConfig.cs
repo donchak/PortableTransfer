@@ -199,6 +199,9 @@ namespace PortableTransfer {
                 targets.InfoDict[localInfoList[i].TargetInfo.Guid] = localInfoList[i].TargetInfo;
             }
         }
+        public void SetComputerNameDict(ComputerNameInfo[] computerNames) {
+            this.Backups.ComputerNames = computerNames;
+        }
         public static TransferJournalItem[] LoadTransferJournal() {
             string fileName = MainTransferJournalPath;
             return LoadRestoreJournalInternal(fileName);
@@ -363,8 +366,11 @@ namespace PortableTransfer {
     [XmlRoot("backupCollection")]
     public class LocalBackupCollection {
         Dictionary<Guid, LocalBackupInfo> infoDict = new Dictionary<Guid, LocalBackupInfo>();
+        Dictionary<Guid, ComputerNameInfo> computerNameDict = new Dictionary<Guid, ComputerNameInfo>();
         [XmlIgnore]
         public Dictionary<Guid, LocalBackupInfo> InfoDict { get { return infoDict; } }
+        [XmlIgnore]
+        public Dictionary<Guid, ComputerNameInfo> ComputerNameDict { get { return computerNameDict; } }
         [XmlElement("backupConfigGuid")]
         public Guid BackupConfigGuid { get; set; }
         [XmlElement("backup", IsNullable = true)]
@@ -372,6 +378,13 @@ namespace PortableTransfer {
             get { return CollectionHelper.EnumerableToArray(infoDict.Values); }
             set {
                 infoDict = CollectionHelper.CollectionToDictionary<Guid, LocalBackupInfo>(value, t => t.Guid);
+            }
+        }
+        [XmlElement("computerName", IsNullable = true)]
+        public ComputerNameInfo[] ComputerNames {
+            get { return CollectionHelper.EnumerableToArray(computerNameDict.Values); }
+            set {
+                computerNameDict = CollectionHelper.CollectionToDictionary<Guid, ComputerNameInfo>(value, t => t.Guid);
             }
         }
     }
@@ -461,6 +474,18 @@ namespace PortableTransfer {
             Guid = guid;
             TargetPath = targetPath;
         }
+    }
+    public class ComputerNameInfo {
+        [XmlElement("name")]
+        public string Name { get; set; }
+        [XmlElement("guid")]
+        public Guid Guid { get; set; }
+        public ComputerNameInfo() { }
+        public ComputerNameInfo(string name, Guid guid) {
+            Name = name;
+            Guid = guid;
+        }
+
     }
     public class LocalBackupInfo {
         [XmlElement("name")]

@@ -33,6 +33,8 @@
             this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
             this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
             this.columnHeader4 = new System.Windows.Forms.ColumnHeader();
+            this.tbComputerName = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -139,12 +141,31 @@
             // 
             this.columnHeader4.Text = "Target Path";
             // 
+            // tbComputerName
+            // 
+            this.tbComputerName.Location = new System.Drawing.Point(423, 385);
+            this.tbComputerName.Name = "tbComputerName";
+            this.tbComputerName.Size = new System.Drawing.Size(237, 20);
+            this.tbComputerName.TabIndex = 5;
+            this.tbComputerName.TextChanged += new System.EventHandler(this.tbComputerName_TextChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(333, 388);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(84, 13);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "Computer name:";
+            // 
             // FormBackupList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btCancel;
             this.ClientSize = new System.Drawing.Size(672, 453);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.tbComputerName);
             this.Controls.Add(this.lvBackupList);
             this.Controls.Add(this.pgBackup);
             this.Controls.Add(this.btDelete);
@@ -157,6 +178,7 @@
             this.Text = "Backup List";
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -172,5 +194,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader3;
         private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.TextBox tbComputerName;
+        private System.Windows.Forms.Label label1;
     }
 }
