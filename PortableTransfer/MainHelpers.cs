@@ -299,6 +299,18 @@ namespace PortableTransfer.Helpers {
             return resultStream.ToArray();
         }
 
+        static MD5 md5;
+        public static MD5 Md5 {
+            get {
+                MD5 value = md5;
+                if (value == null) {
+                    value = new MD5CryptoServiceProvider();
+                    md5 = value;
+                }
+                return value;
+            }
+        }
+
     }
 
 }

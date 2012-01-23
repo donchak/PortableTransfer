@@ -137,10 +137,13 @@ namespace PortableTransfer {
                 File.Delete(file);
             }
         }
-        bool LoadBackupTransferDict(int lastExistsNum) {
+        bool LoadBackupTransferDict(int lastExistsNum, out byte[] passwordCheckData) {
             backupDirectoryDict.Clear();
             backupTransferDict.Clear();
-            if (lastExistsNum < 0) return false;
+            if (lastExistsNum < 0) {
+                passwordCheckData = new byte[0];
+                return false;
+            }
             string backupStorageFileName = Path.Combine(config.BackupPath, string.Format(config.BackupStorageNameFormat, lastExistsNum));
             FileTransferList fileTransferList = null;
             using (FileStream fs = new FileStream(backupStorageFileName, FileMode.Open, FileAccess.Read)) {
@@ -148,6 +151,15 @@ namespace PortableTransfer {
                 byte[] lengthData = new byte[4];
                 if (fs.Read(lengthData, 0, 4) != 4) throw new InvalidDataException("Wronge backup list file format.");
                 int listDataLength = BitConverter.ToInt32(lengthData, 0);
+                fs.Seek(-(listDataLength + 4 + 4), SeekOrigin.End);
+                if (fs.Read(lengthData, 0, 4) != 4) throw new InvalidDataException("Wronge backup list file format.");
+                int passwordCheckDataLength = BitConverter.ToInt32(lengthData, 0);
+                if (passwordCheckDataLength == 0) passwordCheckData = new byte[0];
+                else {
+                    fs.Seek(-(listDataLength + 4 + 4 + passwordCheckDataLength), SeekOrigin.End);
+                    passwordCheckData = new byte[passwordCheckDataLength];
+                    fs.Read(passwordCheckData, 0, passwordCheckDataLength);
+                }
                 fs.Seek(-(listDataLength + 4), SeekOrigin.End);
                 byte[] listData = new byte[listDataLength];
                 fs.Read(listData, 0, listDataLength);
@@ -240,6 +252,24 @@ namespace PortableTransfer {
                 }
             }
         }
+        static bool CheckPassword(Symmetric sym, Data passwordData, byte[] passwordCheckData) {
+            bool wrongPassword = false;
+            try {
+                using (MemoryStream encMS = new MemoryStream(passwordCheckData)) {
+                    passwordCheckData = sym.Decrypt(encMS, passwordData).Bytes;
+                }
+                byte[] guid = new byte[16];
+                Array.Copy(passwordCheckData, guid, 16);
+                byte[] md5InFile = new byte[passwordCheckData.Length - 16];
+                Array.Copy(passwordCheckData, 16, md5InFile, 0, passwordCheckData.Length - 16);
+                byte[] md5 = CompressHelper.Md5.ComputeHash(guid);
+                if (!CollectionHelper.BytesAreEquals(md5, md5InFile))
+                    wrongPassword = true;
+            } catch (Exception) {
+                wrongPassword = true;
+            }
+            return wrongPassword;
+        }
         public TransferJournalItem DoRestore(DoRestoreArgs doRestoreArgs) {
             Exception resultException = null;
             try {
@@ -258,7 +288,14 @@ namespace PortableTransfer {
                 }
                 TransferLog.Log("Load backup info...");
                 int backupNum = doRestoreArgs.BackupNum ?? GetLastBackupStorageNum();
-                if (!LoadBackupTransferDict(backupNum)) return null;
+                byte[] passwordCheckData;
+                if (!LoadBackupTransferDict(backupNum, out passwordCheckData)) return null;
+                if (passwordCheckData.Length > 0 && config.UseEncryption) {
+                    if (CheckPassword(sym, passwordData, passwordCheckData)) {
+                        doRestoreArgs.ShowDialog("Wrong password!", "Portable Transfer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
+                    }
+                }
                 TransferLog.Log("Load target info...");
                 LoadTargetTransferDict();
                 TransferLog.Log("Prepare directory for restore...");
@@ -431,7 +468,14 @@ namespace PortableTransfer {
                     ivData = sym.IntializationVector;
                 }
                 TransferLog.Log("Load backup info...");
-                LoadBackupTransferDict(lastBackupNum);
+                byte[] passwordCheckData;
+                LoadBackupTransferDict(lastBackupNum, out passwordCheckData);
+                if (passwordCheckData.Length > 0 && config.UseEncryption) {
+                    if (CheckPassword(sym, passwordData, passwordCheckData)) {
+                        doBackupArgs.ShowDialog("Wrong password!", "Portable Transfer", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null;
+                    }
+                }
                 TransferLog.Log("Load taget info...");
                 LoadTargetTransferDict();
                 TransferLog.Log("Process differences...");
@@ -533,6 +577,22 @@ namespace PortableTransfer {
                     List<DirectoryTransferInfo> directoriesToSave = new List<DirectoryTransferInfo>();
                     foreach (KeyValuePair<string, int> directory in targetDirectoryDict) {
                         directoriesToSave.Add(new DirectoryTransferInfo(directory.Value, directory.Key));
+                    }
+                    if (config.UseEncryption) {
+                        byte[] guid = Guid.NewGuid().ToByteArray();
+                        byte[] md5 = CompressHelper.Md5.ComputeHash(guid);
+                        byte[] data = new byte[guid.Length + md5.Length];
+                        Array.Copy(guid, data, guid.Length);
+                        Array.Copy(md5, 0, data, guid.Length, md5.Length);
+                        using (MemoryStream encMS = new MemoryStream(data)) {
+                            data = sym.Encrypt(encMS, passwordData).Bytes;
+                            fs.Write(data, 0, data.Length);
+                        }
+                        byte[] lengthBytes = BitConverter.GetBytes(data.Length);
+                        fs.Write(lengthBytes, 0, lengthBytes.Length);
+                    } else {
+                        byte[] lengthBytes = BitConverter.GetBytes((int)0);
+                        fs.Write(lengthBytes, 0, lengthBytes.Length);
                     }
                     TransferLog.Log(string.Format("Next backup list number: {0}", nextBackupStorageNum));
                     SaveBackupFileList(fs, directoriesToSave);
